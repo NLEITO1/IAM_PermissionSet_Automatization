@@ -12,9 +12,8 @@ def obtener_filas(asignaciones, identity_center, cuenta, account_id, permission=
     """Convierte las asignaciones en filas para Excel."""
     filas = []
     for asignacion in asignaciones:
-        # Solo usuarios, ignoramos grupos.
-        if asignacion["PrincipalType"] != "USER":
-            continue
+
+        tipo = "Persona" if asignacion["PrincipalType"] == "USER" else "Grupo"
 
         user_id = asignacion["PrincipalId"]
         permission_set_arn = asignacion["PermissionSetArn"]
@@ -22,26 +21,23 @@ def obtener_filas(asignaciones, identity_center, cuenta, account_id, permission=
         try:
             username = identity_center.usuarios.get(user_id)
             if username is None:
-                print(f"No se encontró el usuario con UserId {user_id}")
+                print(f"No se encontró el usuario con Id {user_id}")
                 continue
             permission_set = identity_center.permission_set_name(permission_set_arn)
         except ClientError as e:
             print(f"[AVISO] No se pudo obtener información para {user_id}: {e}")
             continue
         # Si se especificó --permission, ignoramos los Permission Sets diferentes.
+        # Ademas de eso, ignoramos los Permission Sets que no comienzan con "BDB" (para evitar incluir permisos de AWS).
         if permission_set.upper()[:3]!="BDB" or (permission and permission_set != permission):
             continue
-        
 
-        print(f"Usuario: {username} → {permission_set}")
-        filas.append([cuenta, account_id, None, username, permission_set, None])
+        print(f"{tipo}: {username} → {permission_set}")
+        filas.append([cuenta, account_id, None, username, permission_set, tipo, None])
 
     return filas
 
 
-def preparar_identity_center(profile=None, region=None):
-    """Construye el cliente de Identity Center."""
-    return IdentityCenter(profile_name=profile, region_name=region)
 
 
 def consultar_asignaciones(identity_center, account_id):
@@ -72,12 +68,15 @@ def guardar_excel(excel_path, wb, ws):
 
 
 def crear_excel(excel_path, cuenta, account_id, profile=None, region=None, permission=None):
-    identity_center = preparar_identity_center(profile, region)
-    # La lógica original necesita el mapa UserId -> UserName.
-    identity_center.usuarios = identity_center.obtener_usuarios()
-
     print(f"Consultando cuenta: {cuenta}")
     print(f"ID cuenta: {account_id}")
+
+    identity_center = IdentityCenter(profile_name=profile, region_name=region)
+    # La lógica necesita el mapa UserId -> UserName.
+    identity_center.usuarios = identity_center.obtener_usuarios()
+    identity_center.usuarios.update(identity_center.obtener_grupos())
+
+    
     if permission:
         print(f"Filtro de Permission Set: {permission}")
     print()

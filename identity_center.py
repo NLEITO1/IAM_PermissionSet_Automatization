@@ -105,7 +105,16 @@ class IdentityCenter:
         print(f"Se encontraron {len(usuarios)} usuarios en Identity Center.")
         return usuarios
 
-
+    def obtener_grupos(self):
+        """Devuelve {GroupId: DisplayName} para los grupos del Identity Center."""
+        grupos = {}
+        paginator = self.identity_store.get_paginator("list_groups")
+        for page in paginator.paginate(IdentityStoreId=self.identity_store_id):
+            for group in page.get("Groups", []):
+                grupos[group["GroupId"]] = group["DisplayName"]
+        print(f"Se encontraron {len(grupos)} grupos en Identity Center.")
+        return grupos
+    
     def obtener_asignaciones(self, account_id):
         """Obtiene las asignaciones de todos los Permission Sets de una cuenta."""
         asignaciones = []
