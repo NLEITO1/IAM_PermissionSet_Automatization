@@ -17,6 +17,7 @@ def load_rows(path: str, sheet_name: str = "Usuarios"):
     if sheet_name in wb.sheetnames:
         ws = wb[sheet_name]
     else:
+        print(f"Hoja '{sheet_name}' no encontrada. Se usará la hoja activa.")
         ws = wb.active
 
     headers = [cell.value for cell in ws[1]]

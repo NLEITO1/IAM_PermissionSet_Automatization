@@ -49,7 +49,7 @@ def iniciar(args):
 
     for (account_id, username), group_rows in groups.items():
         filas = ", ".join(str(r["excel_row"]) for r in group_rows)
-        print(f"\n[GRUPO] {account_id} / {username} (filas {filas})")
+        print(f"\n[CUENTA] {account_id} / {username} (filas {filas})")
 
         try:
             user_id = ic.user_id(username, group_rows[0]["user_type"])
@@ -191,7 +191,7 @@ def finalizar(args):
 
     for (account_id, username), group_rows in groups.items():
         filas = ", ".join(str(r["excel_row"]) for r in group_rows)
-        print(f"\n[GRUPO] {account_id} / {username} (filas {filas}) -> "
+        print(f"\n[CUENTA] {account_id} / {username} (filas {filas}) -> "
               f"{len(group_rows)} permiso(s) a restaurar")
 
         try:
