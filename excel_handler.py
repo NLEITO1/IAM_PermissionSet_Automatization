@@ -17,8 +17,11 @@ def load_rows(path: str, sheet_name: str = "Usuarios"):
     if sheet_name in wb.sheetnames:
         ws = wb[sheet_name]
     else:
-        print(f"Hoja '{sheet_name}' no encontrada. Se usará la hoja activa.")
+        print(f"Hoja '{sheet_name}' no encontrada.")
         ws = wb.active
+        print(f"Se usará la hoja activa '{ws.title}' en su lugar.")
+        if input("Escriba 'si' desea continuar (o cualquier otra cosa para cancelar): ").lower() != "si":
+            raise SystemExit("Cancelado por el usuario.")   
 
     headers = [cell.value for cell in ws[1]]
     missing = [c for c in COLUMNS if c not in headers]

@@ -256,14 +256,16 @@ def verificar(args):
     wb, ws, idx, rows = excel.load_rows(args.excel, args.hoja)
     ic = IdentityCenter(profile_name=args.perfil or config.AWS_PROFILE,
                         region_name=args.region or config.AWS_REGION)
-
+    processed = skipped = errors = 0
     for row in rows:
         if row["end_date"] not in (None, ""):
             print(f"[IGNORADO] fila {row['excel_row']}: ya tiene FIN PRUEBA.")
+            skipped+=1
             continue
 
         if not row["account_id"] or not row["username"]:
             print(f"[ERROR] fila {row['excel_row']}: falta ID CUENTA o USUARIO.")
+            errors += 1
             continue
 
         try:
@@ -274,13 +276,17 @@ def verificar(args):
             print(f"\n{row['account_name']} ({row['account_id']}) / {row['username']}")
             if not assignments:
                 print("  ! No tiene Permission Sets asignados directamente.")
+                errors += 1
             else:
                 for assignment in assignments:
                     name = ic.permission_set_name(assignment["PermissionSetArn"])
                     print(f"  ✓ {name}")
+                processed += 1
 
         except Exception as exc:
             print(f"  ✗ ERROR: {exc}")
+            errors += 1
+    print(f"\nVerificación terminada. Procesados: {processed}; ignorados: {skipped}; errores: {errors}")
 
 
 def main():
