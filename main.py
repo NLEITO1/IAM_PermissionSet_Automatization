@@ -9,20 +9,21 @@ def validate_account_id(account_id: str):
     if len(account_id) != 12 or not account_id.isdigit():
         raise ValueError(f"ID CUENTA inválido: '{account_id}'")
 
-
+# Funcion que retira y guarda los permisos orginales en el excel y asigna el permiso temporal
 def iniciar(args):
     if not config.TEMP_PERMISSION_SET:
         raise RuntimeError("Define TEMP_PERMISSION_SET en el entorno.")
-
+    #Cargamos el excel y la hoja, y creamos el objeto IdentityCenter
     wb, ws, idx, rows = excel.load_rows(args.excel, args.hoja)
     ic = IdentityCenter(profile_name=args.perfil or config.AWS_PROFILE,
                         region_name=args.region or config.AWS_REGION)
-
+    #Traemos el ARN del permiso temporal
     temp_arn = ic.permission_set_arn(config.TEMP_PERMISSION_SET)
 
     processed = skipped = errors = 0
 
     candidates = []
+    #Leemos las filas del excel para filtrar en cuales se van a usar
     for row in rows:
         if row["start_date"] not in (None, ""):
             print(f"[IGNORADO] fila {row['excel_row']}: ya tiene INICIO PRUEBA.")
@@ -132,7 +133,7 @@ def iniciar(args):
 
         except Exception as exc:
             errors += len(group_rows)
-            print(f"  ✗ ERROR (grupo {account_id}/{username}): {exc}")
+            print(f"  ✗ ERROR ( {account_id}/{username}): {exc}")
 
     # Escribimos de la fila más alta a la más baja para que insertar filas
     # no invalide los excel_row de escrituras/inserciones pendientes más arriba.
@@ -247,7 +248,7 @@ def finalizar(args):
 
         except Exception as exc:
             errors += len(group_rows)
-            print(f"  ✗ ERROR (grupo {account_id}/{username}): {exc}")
+            print(f"  ✗ ERROR ( {account_id}/{username}): {exc}")
 
     print(f"\nFinalización terminada. Procesados: {processed}; ignorados: {skipped}; errores: {errors}")
 

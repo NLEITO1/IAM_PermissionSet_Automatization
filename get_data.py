@@ -38,8 +38,6 @@ def obtener_filas(asignaciones, identity_center, cuenta, account_id, permission=
     return filas
 
 
-
-
 def consultar_asignaciones(identity_center, account_id):
     """Obtiene las asignaciones de una cuenta."""
     asignaciones = identity_center.obtener_asignaciones(account_id)
@@ -47,24 +45,11 @@ def consultar_asignaciones(identity_center, account_id):
     return asignaciones
 
 
-def preparar_excel(excel_path):
-    """Abre el Excel existente o crea uno nuevo."""
-    existe = Path(excel_path).exists()
-    wb, ws, idx, nuevo = open_or_create(excel_path)
-    if existe:
-        print()
-        print(f"El archivo '{excel_path}' ya existe.")
-        print("Agregando nuevas filas...")
-    else:
-        print()
-        print(f"Creando nuevo archivo '{excel_path}'...")
-    return wb, ws, idx, nuevo
-
-
 def guardar_excel(excel_path, wb, ws):
     """Aplica el formato común y guarda el archivo."""
     format_sheet(ws)
     _save(wb, excel_path)
+
 
 
 def crear_excel(excel_path, cuenta, account_id, profile=None, region=None, permission=None):
@@ -84,7 +69,7 @@ def crear_excel(excel_path, cuenta, account_id, profile=None, region=None, permi
     asignaciones = consultar_asignaciones(identity_center, account_id)
     filas = obtener_filas(asignaciones, identity_center, cuenta, account_id, permission)
 
-    wb, ws, _, _ = preparar_excel(excel_path)
+    wb, ws = open_or_create(excel_path, cuenta)
     append_rows(wb, ws, filas)
     guardar_excel(excel_path, wb, ws)
 

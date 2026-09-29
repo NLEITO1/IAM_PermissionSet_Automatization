@@ -1,7 +1,7 @@
 from datetime import datetime
 from pathlib import Path
 import openpyxl
-
+import config
 COLUMNS = [
     "CUENTA",
     "ID CUENTA",
@@ -12,7 +12,7 @@ COLUMNS = [
     "FIN PRUEBA",
 ]
 
-def load_rows(path: str, sheet_name: str = "Usuarios"):
+def load_rows(path: str, sheet_name: str = config.SHEET_NAME):
     wb = openpyxl.load_workbook(path)
     if sheet_name in wb.sheetnames:
         ws = wb[sheet_name]
@@ -98,14 +98,28 @@ def create_workbook(sheet_name: str = "Usuarios"):
     ws.append(COLUMNS)
     return wb, ws
 
-def open_or_create(path: str, sheet_name: str = "Usuarios"):
+def open_or_create(path: str, sheet_name: str = config.SHEET_NAME):
     """Abre un Excel existente o crea uno nuevo."""
     if Path(path).exists():
-        wb, ws, idx, _ = load_rows(path, sheet_name)
-        return wb, ws, idx, False
+        wb = openpyxl.load_workbook(path)
+
+        print(f"El archivo '{path}' ya existe.")
+        
+        if sheet_name in wb.sheetnames:
+            print("Agregando nuevas filas...")
+            ws = wb[sheet_name]
+        else:
+            print(f"Hoja '{sheet_name}' no encontrada. Se creará una nueva hoja con ese nombre.")
+            print("Recuerda actualizar la variable SHEET_NAME en el archivo .env antes de ejecutar main")
+            ws = wb.create_sheet(title=sheet_name)
+            ws.append(COLUMNS)
+
+        
+        return wb, ws
+    
+    print(f"Creando nuevo archivo '{path}'...")
     wb, ws = create_workbook(sheet_name)
-    idx = {column: position for position, column in enumerate(COLUMNS)}
-    return wb, ws, idx, True
+    return wb, ws
 
 def append_rows(wb, ws, rows):
     """Agrega las filas al final de la hoja."""

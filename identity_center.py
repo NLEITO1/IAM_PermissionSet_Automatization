@@ -176,7 +176,8 @@ class IdentityCenter:
     def assignments_for_user(self, account_id: str, user_id: str, user_type: str="PERSONA") -> List[Dict]:
         paginator = self.sso.get_paginator("list_account_assignments_for_principal")
         result = []
-        user_type= "USER" if user_type.upper()=="PERSONA" else "GROUP"
+        user_type= "GROUP" if user_type.upper()=="GRUPO" else "USER"
+        
 
         for page in paginator.paginate(
             InstanceArn=self.instance_arn,
@@ -225,7 +226,7 @@ class IdentityCenter:
             time.sleep(2)
 
     def assign(self, account_id: str, user_id: str, permission_set_arn: str, user_type: str="PERSONA"):
-        user_type= "USER" if user_type.upper()=="PERSONA" else "GROUP"
+        user_type= "GROUP" if user_type.upper()=="GRUPO" else "USER"
         response = self.sso.create_account_assignment(
             InstanceArn=self.instance_arn,
             TargetId=account_id,
@@ -238,7 +239,8 @@ class IdentityCenter:
         self._wait_creation(request_id, account_id)
 
     def remove(self, account_id: str, user_id: str, permission_set_arn: str, user_type: str="PERSONA"):
-        user_type= "USER" if user_type.upper()=="PERSONA" else "GROUP"
+        user_type= "GROUP" if user_type.upper()=="GRUPO" else "USER"
+        
         response = self.sso.delete_account_assignment(
             InstanceArn=self.instance_arn,
             TargetId=account_id,
