@@ -18,7 +18,10 @@ def iniciar(args):
     ic = IdentityCenter(profile_name=args.perfil or config.AWS_PROFILE,
                         region_name=args.region or config.AWS_REGION)
     #Traemos el ARN del permiso temporal
-    temp_arn = ic.permission_set_arn(config.TEMP_PERMISSION_SET)
+    if config.TEMP_PERMISSION_SET== "NA":
+        temp_arn = None
+    else:
+        temp_arn = ic.permission_set_arn(config.TEMP_PERMISSION_SET)
 
     processed = skipped = errors = 0
 
@@ -60,12 +63,13 @@ def iniciar(args):
                 raise RuntimeError("No tiene ningún Permission Set asignado directamente.")
 
             original_arns = [a["PermissionSetArn"] for a in assignments]
-            if temp_arn in original_arns:
+            if temp_arn in original_arns and len(original_arns) == 1:
                 raise RuntimeError(
                     f"El usuario ya tiene el Permission Set temporal '{config.TEMP_PERMISSION_SET}'."
                 )
 
             original_names = [ic.permission_set_name(arn) for arn in original_arns]
+            
             print(f"  Permisos detectados en AWS: {', '.join(original_names)}")
 
             # --- Emparejamiento: primero las filas que YA traen PERMISO escrito ---
@@ -108,7 +112,8 @@ def iniciar(args):
                 for arn in removed:
                     ic.assign(account_id, user_id, arn, group_rows[0]["user_type"])
                 raise
-
+            if not temp_arn:
+                continue  # no hay temporal definido, solo removemos los originales
             try:
                 ic.assign(account_id, user_id, temp_arn, group_rows[0]["user_type"])
                 print(f"  + Asignado temporal: {config.TEMP_PERMISSION_SET}")
@@ -200,28 +205,21 @@ def finalizar(args):
             assignments = ic.assignments_for_user(account_id, user_id, group_rows[0]["user_type"])
 
             has_temp = any(a["PermissionSetArn"] == temp_arn for a in assignments)
-            if not has_temp:
-                raise RuntimeError(
-                    f"El usuario no tiene asignado el Permission Set temporal "
-                    f"'{config.TEMP_PERMISSION_SET}'. No se modifica nada."
-                )
 
             # Resolvemos ARNs originales y validamos ANTES de tocar nada.
             targets = []  # (row, original_arn)
             for row in group_rows:
                 original_arn = ic.permission_set_arn(row["permission"])
-                has_original = any(a["PermissionSetArn"] == original_arn for a in assignments)
-                if has_original:
-                    raise RuntimeError(
-                        f"El usuario ya tiene asignado '{row['permission']}' "
-                        f"(fila {row['excel_row']}). No se modifica nada en el grupo."
-                    )
+                
                 targets.append((row, original_arn))
 
             # Asignamos todos los originales del grupo, con rollback si alguno falla.
             assigned = []
             try:
                 for row, original_arn in targets:
+                    if original_arn in (a["PermissionSetArn"] for a in assignments):
+                        print(f"El usuario ya tiene asignado '{row['permission']}', se omite. ")
+                        continue
                     ic.assign(account_id, user_id, original_arn, group_rows[0]["user_type"])
                     assigned.append(original_arn)
                     print(f"  + Restaurado: {row['permission']} (fila {row['excel_row']})")
@@ -233,6 +231,9 @@ def finalizar(args):
 
             # Solo removemos el temporal una vez, después de que TODOS los originales
             # del grupo quedaron asignados correctamente.
+            if not has_temp:
+                print("  ! El usuario no tenía el Permission Set temporal, no se removerá.")
+                continue
             try:
                 ic.remove(account_id, user_id, temp_arn, group_rows[0]["user_type"])
                 print(f"  - Removido temporal: {config.TEMP_PERMISSION_SET}")

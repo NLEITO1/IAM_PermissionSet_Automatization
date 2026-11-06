@@ -186,7 +186,6 @@ class IdentityCenter:
             Filter={"AccountId": account_id},
         ):
             result.extend(page.get("AccountAssignments", []))
-
         return result
 
     def current_permission_sets(self, account_id: str, user_id: str) -> List[str]: #BORARR 
@@ -240,7 +239,7 @@ class IdentityCenter:
 
     def remove(self, account_id: str, user_id: str, permission_set_arn: str, user_type: str="PERSONA"):
         user_type= "GROUP" if user_type.upper()=="GRUPO" else "USER"
-        
+        #print(f"Eliminando asignación: {user_type} {user_id} en cuenta {account_id} para Permission Set {permission_set_arn}")
         response = self.sso.delete_account_assignment(
             InstanceArn=self.instance_arn,
             TargetId=account_id,
