@@ -322,6 +322,11 @@ def main():
         print(f"ERROR FATAL: {exc}", file=sys.stderr)
         sys.exit(1)
 
+from time import perf_counter
 
 if __name__ == "__main__":
+    start_time = perf_counter()
     main()
+    elapsed = perf_counter() - start_time
+
+    print(f"\nTiempo total de ejecución: {elapsed:.2f} segundos")

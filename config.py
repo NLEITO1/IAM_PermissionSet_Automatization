@@ -1,5 +1,6 @@
 import os
 from dotenv import load_dotenv
+from pathlib import Path
 
 load_dotenv()
 
@@ -17,10 +18,7 @@ AWS_PROFILE = required("AWS_PROFILE")
 AWS_REGION = required("AWS_REGION")
 TEMP_PERMISSION_SET = required("TEMP_PERMISSION_SET")
 
-EXCEL_FILE = os.getenv(
-    "EXCEL_FILE",
-    "usuarios.xlsx"
-)
+EXCEL_FILE = archivo = Path.home() / os.getenv("EXCEL_FILE")
 SHEET_NAME = os.getenv(
     "SHEET_NAME",
     "Usuarios"

@@ -102,7 +102,7 @@ class IdentityCenter:
         for page in paginator.paginate(IdentityStoreId=self.identity_store_id):
             for user in page.get("Users", []):
                 usuarios[user["UserId"]] = user["UserName"]
-        print(f"Se encontraron {len(usuarios)} usuarios en Identity Center.")
+        #print(f"Se encontraron {len(usuarios)} usuarios en Identity Center.")
         return usuarios
 
     def obtener_grupos(self):
@@ -112,7 +112,7 @@ class IdentityCenter:
         for page in paginator.paginate(IdentityStoreId=self.identity_store_id):
             for group in page.get("Groups", []):
                 grupos[group["GroupId"]] = group["DisplayName"]
-        print(f"Se encontraron {len(grupos)} grupos en Identity Center.")
+        #print(f"Se encontraron {len(grupos)} grupos en Identity Center.")
         return grupos
     
     def obtener_asignaciones(self, account_id):
@@ -120,7 +120,7 @@ class IdentityCenter:
         asignaciones = []
         self._load_permission_sets()
         permission_sets = list(self._permission_sets_by_name.values())
-        print(f"Se encontraron {len(permission_sets)} Permission Sets.")
+        #print(f"Se encontraron {len(permission_sets)} Permission Sets.")
         for permission_set_arn in permission_sets:
             try:
                 paginator = self.sso.get_paginator("list_account_assignments")
